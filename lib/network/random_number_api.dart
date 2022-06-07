@@ -1,50 +1,42 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
-class RandomNumberApi {
-  static const String endpointServer = 'csrng.net';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
-  static Future<int> fetchRandomNumber() async {
+Future<Get_Values> getRandomNumbers() async {
+  final response = await http
+      .get(Uri.parse('https://csrng.net/csrng/csrng.php?min=1&max=1000'));
 
-    var url = Uri.https(endpointServer, '/csrng/csrng.php', {'min': '1', 'max': '1000'});
-
-    // Await the http get response, then decode the json-formatted response.
-    var response = await http.get(url);
-    if (response.statusCode == 200) {
-      var jsonResponse = jsonDecode(response.body) as List;
-      if(jsonResponse[0]['status'] == "success")
-      {
-        var randomNumber = jsonResponse[0]['random'];
-        print('Random Number: $randomNumber');
-        return randomNumber;
-      }
-    } else {
-      print('Request failed with status: ${response.statusCode}.');
-    }
-    return -1;
-
-
-
-
-
-
-
-    // http.Response response = await http.get(
-    //     Uri.https(endpointServer));
-    //
-    // Map<String, dynamic> responseMap = jsonDecode(response.body);
-    // return responseMap["result"];
-    //
-    // var response = await http.get(url);
-    // if (response.statusCode == 200) {
-    //   var jsonResponse =
-    //   convert.jsonDecode(response.body) as Map<String, dynamic>;
-    //   var itemCount = jsonResponse['totalItems'];
-    //   print('Number of books about http: $itemCount.');
-    // } else {
-    //   print('Request failed with status: ${response.statusCode}.');
-    // }
-
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    return Get_Values.fromJson(jsonDecode(response.body)[0]);
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load numbers');
   }
+}
+
+
+
+class Get_Values{
+  String status;
+  int min, max;
+  int random;
+
+  Get_Values(
+      {required this.status,
+        required this.min,
+        required this.max,
+        required this.random});
+
+  factory Get_Values.fromJson(Map<String, dynamic> json)=> Get_Values(
+    status: json["status"],
+    min: json["min"],
+    max: json["max"],
+    random:json["random"],
+  );
 }
 
